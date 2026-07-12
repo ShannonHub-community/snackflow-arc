@@ -1,0 +1,122 @@
+--- src/pages/owner/tabs/SecurityTeam.tsx
++++ src/pages/owner/tabs/SecurityTeam.tsx
+@@ -10,13 +10,15 @@
+   TableHead,
+   TableHeader,
+   TableRow
+ } from "../../../components/ui/table";
+-import { ShieldCheck, UserPlus, Trash2, Ban, Loader2, CheckCircle2 } from "lucide-react";
++import { ShieldCheck, UserPlus, Trash2, Ban, Loader2, CheckCircle2, Lock, X } from "lucide-react";
+ 
+ export default function SecurityTeam() {
+   const [requestStatus, setRequestStatus] = useState<"idle" | "requesting" | "requested">("idle");
+   const [newStaffStatus, setNewStaffStatus] = useState<"idle" | "adding" | "added">("idle");
+   const [banningId, setBanningId] = useState<number | null>(null);
+   const [deletingId, setDeletingId] = useState<number | null>(null);
++  const [showPayoutModal, setShowPayoutModal] = useState(false);
++  const [modalStep, setModalStep] = useState<"otp" | "form" | "saving" | "saved">("otp");
+ 
+   const [staffList, setStaffList] = useState([
+@@ -28,10 +30,22 @@
+ 
+   const handleRequest = () => {
+-    setRequestStatus("requesting");
+-    setTimeout(() => {
+-      setRequestStatus("requested");
+-      setTimeout(() => setRequestStatus("idle"), 2000);
+-    }, 1000);
++    setShowPayoutModal(true);
++    setModalStep("otp");
++  };
++
++  const handleModalSubmit = (e: React.FormEvent) => {
++    e.preventDefault();
++    if (modalStep === "otp") {
++      setModalStep("form");
++    } else if (modalStep === "form") {
++      setModalStep("saving");
++      setTimeout(() => {
++        setModalStep("saved");
++        setRequestStatus("requested");
++        setTimeout(() => {
++          setShowPayoutModal(false);
++          setModalStep("otp");
++          setTimeout(() => setRequestStatus("idle"), 3000);
++        }, 2000);
++      }, 1000);
++    }
+   };
+ 
+@@ -58,6 +72,74 @@
+   return (
+     <div className="space-y-6">
++      {/* Payout Account Modal */}
++      {showPayoutModal && (
++        <div 
++          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
++          onClick={() => {
++            setShowPayoutModal(false);
++            setModalStep("otp");
++          }}
++        >
++          <div 
++            className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
++            onClick={(e) => e.stopPropagation()}
++          >
++            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
++              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
++                <Lock className="w-5 h-5 text-blue-600" />
++                Change Payout Account
++              </h3>
++              <button 
++                onClick={() => {
++                  setShowPayoutModal(false);
++                  setModalStep("otp");
++                }}
++                className="text-slate-400 hover:text-slate-600 transition-colors"
++              >
++                <X className="w-5 h-5" />
++              </button>
++            </div>
++            
++            <form onSubmit={handleModalSubmit} className="p-6">
++              {modalStep === "otp" && (
++                <div className="space-y-4">
++                  <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-6">
++                    A 6-digit OTP has been sent to <strong>hello@cafe882.com</strong>.
++                  </div>
++                  <div className="space-y-2">
++                    <Label>Email OTP</Label>
++                    <Input autoFocus placeholder="Enter 6-digit code" maxLength={6} required className="text-center tracking-widest text-lg" />
++                  </div>
++                  <Button type="submit" className="w-full h-12 text-md font-bold mt-6">Verify OTP</Button>
++                </div>
++              )}
++              {modalStep === "form" && (
++                <div className="space-y-4">
++                  <div className="space-y-2">
++                    <Label>New Merchant Gateway ID</Label>
++                    <Input placeholder="e.g. merchant_987654321" required />
++                  </div>
++                  <Button type="submit" className="w-full h-12 text-md font-bold mt-6 bg-slate-900 text-white">Save Changes</Button>
++                </div>
++              )}
++              {modalStep === "saving" && (
++                <div className="py-12 flex flex-col items-center justify-center text-slate-500">
++                  <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
++                  <p className="font-medium">Saving changes...</p>
++                </div>
++              )}
++              {modalStep === "saved" && (
++                <div className="py-12 flex flex-col items-center justify-center text-green-600">
++                  <CheckCircle2 className="w-16 h-16 mb-4 animate-in zoom-in" />
++                  <p className="text-xl font-bold">Successfully Updated!</p>
++                </div>
++              )}
++            </form>
++          </div>
++        </div>
++      )}
++
+       <div className="flex items-center gap-3 mb-6">
+         <ShieldCheck className="h-8 w-8 text-blue-600 hidden md:block" />

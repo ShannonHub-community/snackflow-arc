@@ -1,0 +1,6 @@
+{
+  "name": "SnackFlow",
+  "description": "Secure, comprehensive quick-service restaurant management system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,123 @@
+--- src/pages/owner/tabs/StoreCustomization.tsx
++++ src/pages/owner/tabs/StoreCustomization.tsx
+@@ -10,7 +10,8 @@
+   TableHeader,
+   TableRow
+ } from "../../../components/ui/table";
+-import { Plus, GripVertical, Pencil, Trash2, LayoutTemplate, CheckCircle2, Loader2 } from "lucide-react";
++import { Input } from "../../../components/ui/input";
++import { Label } from "../../../components/ui/label";
++import { Plus, GripVertical, Pencil, Trash2, LayoutTemplate, CheckCircle2, Loader2, X, Coffee, Pizza, Utensils, Sandwich } from "lucide-react";
+ 
+ export default function StoreCustomization() {
+   const [theme, setTheme] = useState("maharashtrian");
+@@ -23,12 +24,20 @@
+   };
+ 
++  const [showAddModal, setShowAddModal] = useState(false);
++  const [newItem, setNewItem] = useState({ name: "", price: "", category: "Mains", station: "Kitchen counter", icon: "Utensils" });
++
+   const handleAdd = () => {
+-    setAddingItem("adding");
+-    setTimeout(() => {
+-      setAddingItem("added");
+-      setTimeout(() => setAddingItem("idle"), 1500);
+-    }, 800);
++    setShowAddModal(true);
++  };
++
++  const handleAddSubmit = (e: React.FormEvent) => {
++    e.preventDefault();
++    setAddingItem("adding");
++    setShowAddModal(false);
++    setTimeout(() => {
++      setAddingItem("added");
++      setMenuItems([...menuItems, { id: Date.now(), name: newItem.name, price: newItem.price, category: newItem.category, priority: menuItems.length + 1, station: newItem.station, icon: newItem.icon }]);
++      setNewItem({ name: "", price: "", category: "Mains", station: "Kitchen counter", icon: "Utensils" });
++      setTimeout(() => setAddingItem("idle"), 1500);
++    }, 800);
+   };
+ 
+@@ -51,8 +60,93 @@
+   ]);
+ 
+   return (
+-    <div className="h-[calc(100vh-140px)] flex flex-col">
++    <div className="h-[calc(100vh-140px)] flex flex-col relative">
++      {/* Add Item Modal */}
++      {showAddModal && (
++        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
++          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
++            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
++              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
++                <Plus className="w-5 h-5 text-blue-600" />
++                Add Menu Item
++              </h3>
++              <button 
++                onClick={() => setShowAddModal(false)}
++                className="text-slate-400 hover:text-slate-600 transition-colors"
++              >
++                <X className="w-5 h-5" />
++              </button>
++            </div>
++            
++            <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
++              <div className="space-y-2">
++                <Label>Item Name</Label>
++                <Input value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} placeholder="e.g. Masala Dosa" required />
++              </div>
++              <div className="space-y-2">
++                <Label>Price (₹)</Label>
++                <Input type="number" step="0.01" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} placeholder="99.00" required />
++              </div>
++              <div className="space-y-2">
++                <Label>Type of Food</Label>
++                <select 
++                  value={newItem.category} 
++                  onChange={e => setNewItem({...newItem, category: e.target.value})}
++                  className="w-full h-10 px-3 py-2 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
++                >
++                  <option value="Mains">Mains</option>
++                  <option value="Sides">Sides</option>
++                  <option value="Beverages">Beverages</option>
++                  <option value="Desserts">Desserts</option>
++                </select>
++              </div>
++              <div className="space-y-2">
++                <Label>Station Routing</Label>
++                <select 
++                  value={newItem.station} 
++                  onChange={e => setNewItem({...newItem, station: e.target.value})}
++                  className="w-full h-10 px-3 py-2 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
++                >
++                  <option value="Kitchen counter">Kitchen counter</option>
++                  <option value="Beverage">Beverage</option>
++                  <option value="Fryer">Fryer</option>
++                  <option value="Dosa Tawa">Dosa Tawa</option>
++                </select>
++              </div>
++              <div className="space-y-2">
++                <Label>Select Icon (SVG)</Label>
++                <div className="grid grid-cols-4 gap-2">
++                  {["Utensils", "Coffee", "Pizza", "Sandwich"].map(iconName => (
++                    <div 
++                      key={iconName}
++                      onClick={() => setNewItem({...newItem, icon: iconName})}
++                      className={`cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border ${newItem.icon === iconName ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-500'}`}
++                    >
++                      {iconName === "Utensils" && <Utensils className="h-6 w-6 mb-1" />}
++                      {iconName === "Coffee" && <Coffee className="h-6 w-6 mb-1" />}
++                      {iconName === "Pizza" && <Pizza className="h-6 w-6 mb-1" />}
++                      {iconName === "Sandwich" && <Sandwich className="h-6 w-6 mb-1" />}
++                      <span className="text-[10px] font-bold">{iconName}</span>
++                    </div>
++                  ))}
++                </div>
++              </div>
++              <Button type="submit" className="w-full h-12 text-md font-bold mt-6 bg-slate-900 text-white">Add to Menu</Button>
++            </form>
++          </div>
++        </div>
++      )}
++
+       <div className="mb-6 shrink-0 flex items-center justify-between">
