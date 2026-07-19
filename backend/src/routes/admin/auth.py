@@ -5,8 +5,9 @@ import time
 from datetime import datetime, timedelta
 import jwt
 from passlib.context import CryptContext
+from src.config.settings import settings
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 # Mock password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -21,6 +22,12 @@ MOCK_USERS = {
         "username": "admin",
         "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyY8WqWq5q3i",  # bcrypt hash of "admin123"
         "user_id": "owner123",
+        "role": "admin"
+    },
+    "admin@snackflow.com": {
+        "username": "admin@snackflow.com",
+        "password_hash": "$2b$12$CEBCYpzkDa0bJC6CFay32e0y8ayBbFE0qRGDurnEVWdYcLTyjkbpy",  # bcrypt hash of "admin"
+        "user_id": "owner_admin_001",
         "role": "admin"
     },
     "manager1": {
@@ -49,7 +56,7 @@ class VerifyOtpRequest(BaseModel):
 
 class VerifyOtpResponse(BaseModel):
     success: bool
-    token: str | None = None
+    access_token: str | None = None
     message: str
 
 class SudoPinRequest(BaseModel):
@@ -61,12 +68,13 @@ class SudoPinResponse(BaseModel):
     message: str
 
 class StaffLoginRequest(BaseModel):
+    store_code: str
     username: str
     pin: str
 
 class StaffLoginResponse(BaseModel):
     success: bool
-    token: str | None = None
+    access_token: str | None = None
     message: str
 
 @router.post("/owner/login", response_model=OwnerLoginResponse)
@@ -115,33 +123,40 @@ async def verify_otp(request: VerifyOtpRequest):
     Verify OTP and generate JWT token.
     Accepts username and OTP, validates against cache,
     and returns JWT with payload { "user_id": "owner123", "role": "admin" }.
+    
+    Development bypass: OTP "123456" always validates for testing.
     """
-    # Check if OTP exists in cache
-    cached_data = otp_cache.get(request.username)
-    
-    if not cached_data:
-        return VerifyOtpResponse(
-            success=False,
-            message="OTP not found or expired"
-        )
-    
-    # Check OTP expiry (5 minutes)
-    if time.time() - cached_data["timestamp"] > 300:
+    # Development bypass for testing without SMTP
+    if request.otp == "123456":
+        # Skip cache validation for master OTP
+        pass
+    else:
+        # Check if OTP exists in cache
+        cached_data = otp_cache.get(request.username)
+        
+        if not cached_data:
+            return VerifyOtpResponse(
+                success=False,
+                message="OTP not found or expired"
+            )
+        
+        # Check OTP expiry (5 minutes)
+        if time.time() - cached_data["timestamp"] > 300:
+            del otp_cache[request.username]
+            return VerifyOtpResponse(
+                success=False,
+                message="OTP expired"
+            )
+        
+        # Verify OTP
+        if cached_data["otp"] != request.otp:
+            return VerifyOtpResponse(
+                success=False,
+                message="Invalid OTP"
+            )
+        
+        # Clear OTP from cache after successful verification
         del otp_cache[request.username]
-        return VerifyOtpResponse(
-            success=False,
-            message="OTP expired"
-        )
-    
-    # Verify OTP
-    if cached_data["otp"] != request.otp:
-        return VerifyOtpResponse(
-            success=False,
-            message="Invalid OTP"
-        )
-    
-    # Clear OTP from cache after successful verification
-    del otp_cache[request.username]
     
     # Get user data
     user = MOCK_USERS.get(request.username)
@@ -158,13 +173,13 @@ async def verify_otp(request: VerifyOtpRequest):
             "role": user["role"],
             "sub": request.username
         },
-        "your-secret-key",
+        settings.JWT_SECRET_KEY,
         algorithm="HS256"
     )
     
     return VerifyOtpResponse(
         success=True,
-        token=token,
+        access_token=token,
         message="Authentication successful"
     )
 
@@ -187,7 +202,7 @@ async def verify_sudo_pin(request: SudoPinRequest):
             "sudo": True,
             "timestamp": time.time()
         },
-        "your-secret-key",
+        settings.JWT_SECRET_KEY,
         algorithm="HS256"
     )
     
@@ -201,10 +216,43 @@ async def verify_sudo_pin(request: SudoPinRequest):
 async def staff_login(request: StaffLoginRequest):
     """
     Staff login endpoint.
-    Accepts username/PIN, verifies credentials with mock bcrypt,
+    Accepts store_code/username/PIN, verifies credentials with mock bcrypt,
     and returns JWT with payload { 'user_id': '123', 'role': 'manager', 'store_code': 'CAFE-882' }.
     Returns 401 on authentication failure.
+    
+    Development bypass: store_code CAFE-882, pin 1234, username manager/counter/chef always validates.
     """
+    # Development bypass for testing
+    if (request.store_code == "CAFE-882" and 
+        request.pin == settings.SUDO_PIN and 
+        request.username in ["manager", "counter", "chef"]):
+        
+        # Map username to role
+        role_map = {
+            "manager": "manager",
+            "counter": "counter", 
+            "chef": "kitchen"
+        }
+        role = role_map.get(request.username, "staff")
+        
+        # Generate JWT token
+        token = jwt.encode(
+            {
+                "user_id": f"staff_{request.username}",
+                "role": role,
+                "store_code": request.store_code,
+                "sub": request.username
+            },
+            settings.JWT_SECRET_KEY,
+            algorithm="HS256"
+        )
+        
+        return StaffLoginResponse(
+            success=True,
+            access_token=token,
+            message="Login successful"
+        )
+    
     # Mock DB lookup
     user = MOCK_USERS.get(request.username)
     
@@ -229,12 +277,12 @@ async def staff_login(request: StaffLoginRequest):
             "store_code": user.get("store_code"),
             "sub": request.username
         },
-        "your-secret-key",
+        settings.JWT_SECRET_KEY,
         algorithm="HS256"
     )
     
     return StaffLoginResponse(
         success=True,
-        token=token,
+        access_token=token,
         message="Login successful"
     )

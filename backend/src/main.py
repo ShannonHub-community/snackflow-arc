@@ -3,7 +3,10 @@ SnackFlow API -- application entry point.
 
 Run locally with:
     uvicorn src.main:app --reload --port 8000
+    (Triggered reload for rate limit bypass)
+
 """
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -52,9 +55,14 @@ app = FastAPI(
 )
 
 # ---- CORS ----
+origins = ["http://localhost:3000"]
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,10 +83,10 @@ app.include_router(counter.router, prefix="/api/counter", tags=["Counter Portal"
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 
 # ---- Routes: Customer (Member 3's Code) ----
-app.include_router(menu.router, prefix="/api/customer/menu", tags=["Customer Menu"])
-app.include_router(orders.router, prefix="/api/customer/orders", tags=["Customer Orders"])
-app.include_router(payments.router, prefix="/api/customer/payments", tags=["Customer Payments"])
-app.include_router(store.router, prefix="/api/customer/store", tags=["Customer Store Data"])
+app.include_router(menu.router, prefix="/api/customer", tags=["Customer Menu"])
+app.include_router(orders.router, prefix="/api/customer", tags=["Customer Orders"])
+app.include_router(payments.router, prefix="/api/customer", tags=["Customer Payments"])
+app.include_router(store.router, prefix="/api/customer", tags=["Customer Store Data"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():

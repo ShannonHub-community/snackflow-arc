@@ -47,17 +47,17 @@ export const mockOrdersDatabase: Record<string, MockOrder> = {
   },
   "C12": {
     id: "C12",
-    total: 420,
+    total: 300,
     items: [
-      { name: "Paneer Tikka Sandwich", quantity: 2, price: 150 },
-      { name: "Masala Chai", quantity: 2, price: 60 }
+      { name: "Sandwich", quantity: 2, price: 120 },
+      { name: "Tea", quantity: 2, price: 30 }
     ]
   },
   "C13": {
     id: "C13",
-    total: 120,
+    total: 250,
     items: [
-      { name: "Samosa Chaat", quantity: 1, price: 120, note: "Extra spicy" }
+      { name: "Pizza", quantity: 1, price: 250, note: "Extra cheese" }
     ]
   }
 };

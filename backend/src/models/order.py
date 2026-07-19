@@ -91,6 +91,14 @@ class OrderItem(Base, UUIDPKMixin):
     order: Mapped["Order"] = relationship(back_populates="items")
     menu_item: Mapped["MenuItem"] = relationship(back_populates="order_items")
 
+    @property
+    def name(self) -> str | None:
+        return self.menu_item.name if self.menu_item else None
+
+    @property
+    def item_name(self) -> str | None:
+        return self.menu_item.name if self.menu_item else None
+
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_order_items_quantity_positive"),
     )

@@ -1,16 +1,31 @@
-# Environments
+# ===== Environments & Secrets =====
 .env
-.env.local
+.env.*
+!.env.example
 .venv/
+venv/
 env/
 
-# Python
+# ===== Python =====
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+*.sqlite3
 
-# Node
+# ===== Node.js =====
 node_modules/
 dist/
+build/
+coverage/
+*.log
 
-# OS
+# ===== OS =====
 .DS_Store
+Thumbs.db
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.swp
+*.swo

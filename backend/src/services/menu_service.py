@@ -8,7 +8,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.menu import menu_category_crud, menu_item_crud
-from src.models.menu import MenuItem
+from src.models.menu import MenuCategory, MenuItem
 from src.schemas.menu import MenuItemCreate, MenuItemUpdate
 from src.utils.exceptions import NotFoundError, ValidationError
 from src.utils.logger import get_logger
@@ -19,6 +19,18 @@ logger = get_logger(__name__)
 async def list_in_stock_items(db: AsyncSession) -> list[MenuItem]:
     """GET /api/menu -- only ever returns items where in_stock = true."""
     return await menu_item_crud.get_in_stock(db)
+
+
+async def list_all_items(db: AsyncSession) -> list[MenuItem]:
+    """GET /api/menu?all_items=True -- returns all items."""
+    return await menu_item_crud.get_multi(db)
+
+
+
+async def list_categories(db: AsyncSession) -> list[MenuCategory]:
+    """GET /api/menu/categories -- returns all menu categories."""
+    return await menu_category_crud.get_multi(db)
+
 
 
 async def get_item_or_404(db: AsyncSession, item_id: uuid.UUID) -> MenuItem:

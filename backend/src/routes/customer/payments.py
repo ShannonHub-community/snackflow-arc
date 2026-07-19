@@ -11,7 +11,7 @@ from src.schemas.payment import (
 from src.services import payment_service
 from src.utils.security import verify_admin_key
 
-router = APIRouter(prefix="/api/payments", tags=["Payments"])
+router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
 @router.post("/create-order", response_model=CreatePaymentOrderResponse)

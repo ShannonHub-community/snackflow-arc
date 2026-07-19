@@ -7,8 +7,8 @@ mock_orders = [
         "status": "Waiting",
         "timestamp": time.time() - 600,  # 10 minutes ago
         "items": [
-            {"item_id": "prod_dosa_001", "name": "Masala Dosa", "quantity": 2, "allocated": 0},
-            {"item_id": "prod_snack_001", "name": "Samosa", "quantity": 1, "allocated": 0}
+            {"item_id": "prod_pizza_001", "name": "Pizza", "quantity": 2, "allocated": 0},
+            {"item_id": "prod_burger_001", "name": "Burger", "quantity": 1, "allocated": 0}
         ]
     },
     {
@@ -16,7 +16,7 @@ mock_orders = [
         "status": "Waiting",
         "timestamp": time.time() - 300,  # 5 minutes ago
         "items": [
-            {"item_id": "prod_dosa_001", "name": "Masala Dosa", "quantity": 1, "allocated": 0}
+            {"item_id": "prod_pizza_001", "name": "Pizza", "quantity": 1, "allocated": 0}
         ]
     },
     {
@@ -24,7 +24,7 @@ mock_orders = [
         "status": "Waiting",
         "timestamp": time.time() - 120,  # 2 minutes ago
         "items": [
-            {"item_id": "prod_beverage_001", "name": "Coke", "quantity": 2, "allocated": 0}
+            {"item_id": "prod_coffee_001", "name": "Coffee", "quantity": 2, "allocated": 0}
         ]
     }
 ]

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict, field_serializer, model_validator
 
 from src.config.settings import settings
 from src.models.enums import OrderStatus, OrderType
@@ -45,6 +45,16 @@ class OrderItemOut(ORMModel):
     unit_price: Decimal
     subtotal: Decimal
     notes: str | None
+    name: str | None = None
+    item_name: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer('name', 'item_name')
+    def serialize_name(self, value: str | None, _info):
+        if value is not None:
+            return value
+        return None
 
 
 class OrderOut(ORMModel):
@@ -57,9 +67,18 @@ class OrderOut(ORMModel):
     total_amount: Decimal
     eta_minutes: int | None
     special_instructions: str | None
-    items: list[OrderItemOut]
+    items: list[OrderItemOut] = Field(default_factory=list)
+    order_items: list[OrderItemOut] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode='after')
+    def sync_items_and_order_items(self) -> 'OrderOut':
+        if not self.order_items and self.items:
+            self.order_items = self.items
+        elif not self.items and self.order_items:
+            self.items = self.order_items
+        return self
 
 
 class OrderCreateResponse(BaseModel):

@@ -25,6 +25,15 @@ def _extract_client_ip(request: Request) -> str:
 
 
 async def order_rate_limit_dependency(request: Request) -> None:
-    redis_client = get_redis()
-    ip_address = _extract_client_ip(request)
-    await enforce_order_rate_limit(redis_client, ip_address)
+    try:
+        redis_client = get_redis()
+        ip_address = _extract_client_ip(request)
+        await enforce_order_rate_limit(redis_client, ip_address)
+    except Exception as e:
+        # Handle cases where local Redis server is down in dev environment
+        from src.utils.logger import get_logger
+        logger = get_logger("rate_limiter")
+        logger.warning(
+            "Bypassing order rate limiter because Redis connection failed: %s", str(e)
+        )
+

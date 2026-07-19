@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserCheck } from "lucide-react";
 import { PinModal } from "../../../components/PinModal";
+import { apiClient } from "../../../lib/apiClient";
 
 export default function ShiftControl() {
   const [storeState, setStoreState] = useState<"open" | "paused" | "closed">("open");
@@ -8,9 +9,29 @@ export default function ShiftControl() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pendingState, setPendingState] = useState<"open" | "paused" | "closed" | null>(null);
 
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await apiClient.get<any>("/customer/store/status");
+        if (res && typeof res.is_open === "boolean") {
+          if (!res.is_open) {
+            setStoreState("closed");
+          } else if (res.message && res.message.toLowerCase().includes("paused")) {
+            setStoreState("paused");
+          } else {
+            setStoreState("open");
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch initial store status:", e);
+      }
+    };
+    fetchStatus();
+  }, []);
+
   const activeStaff = [
     { username: "manager_anil", station: "Manager Portal", time: "8:00 AM" },
-    { username: "dosa_chef_01", station: "Kitchen - Dosa Tawa", time: "8:15 AM" },
+    { username: "oven_chef_01", station: "Kitchen - Oven Station", time: "8:15 AM" },
     { username: "counter_front", station: "Front Counter", time: "8:30 AM" }
   ];
 
@@ -26,9 +47,17 @@ export default function ShiftControl() {
     setShowPinModal(true);
   };
 
-  const handlePinSuccess = () => {
+  const handlePinSuccess = async () => {
     if (pendingState) {
+      const isClosed = pendingState === "closed";
+      const statusText = pendingState === "open" ? "Open" : (pendingState === "paused" ? "Paused" : "Closed");
       setStoreState(pendingState);
+      try {
+        await apiClient.put("/manager/store/status", { status: statusText });
+        await apiClient.patch("/customer/store/status", { is_open: !isClosed, message: isClosed ? "Store is currently closed" : (pendingState === "paused" ? "Store is paused" : "Store is open") });
+      } catch (e) {
+        console.warn("Store status API update warning:", e);
+      }
     }
     setShowPinModal(false);
     setPendingState(null);

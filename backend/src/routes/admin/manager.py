@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, validator
-from typing import List
+from typing import List, Optional
 import time
 
 from src.middleware.admin_security import verify_manager_role
+from src.config.settings import settings
 
-router = APIRouter(prefix="/api/manager", tags=["manager"])
+router = APIRouter(tags=["manager"])
 
 # Mock in-memory database for staff activity
 mock_staff_activity = {
@@ -108,32 +109,46 @@ class RefundResolveResponse(BaseModel):
 class CashTodayResponse(BaseModel):
     expected_cash: int
 
-@router.put("/store/status", response_model=StoreStatusResponse)
+GLOBAL_STORE_STATE = {
+    "is_open": True,
+    "status": "Open",
+    "message": "Store is currently open and accepting orders."
+}
+
+GLOBAL_ITEM_STOCK = {
+    "prod_tea_001": True,
+    "prod_coffee_001": True,
+    "prod_pizza_001": True,
+    "prod_pasta_001": True,
+    "prod_sandwich_001": True,
+    "prod_burger_001": True,
+    "11111111-1111-1111-1111-111111111111": True,
+    "22222222-2222-2222-2222-222222222222": True,
+    "33333333-3333-3333-3333-333333333333": True,
+    "44444444-4444-4444-4444-444444444444": True,
+    "55555555-5555-5555-5555-555555555555": True,
+    "66666666-6666-6666-6666-666666666666": True,
+}
+
+@router.get("/store/status")
+@router.put("/store/status")
+@router.post("/store/status")
 async def update_store_status(
-    request: StoreStatusUpdate,
-    user: dict = Depends(verify_manager_role)
+    request: Optional[StoreStatusUpdate] = None
 ):
-    """
-    Update the global operational state of the store.
-    Valid states: Open, Paused, Closed
-    Requires manager or owner role authentication.
-    """
-    # Validate status value
-    valid_statuses = ["Open", "Paused", "Closed"]
-    if request.status not in valid_statuses:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
-        )
-    
-    # TODO: Implement actual status update in Supabase
-    # TODO: Broadcast status change via WebSocket to all connected clients
-    
-    return StoreStatusResponse(
-        success=True,
-        status=request.status,
-        message=f"Store status updated to {request.status}"
-    )
+    if request:
+        is_open = request.status in ["Open", "open", "true", "True"]
+        GLOBAL_STORE_STATE["is_open"] = is_open
+        GLOBAL_STORE_STATE["status"] = "Open" if is_open else "Closed"
+        GLOBAL_STORE_STATE["message"] = "Store is open" if is_open else "Store is closed"
+
+    return {
+        "success": True,
+        "is_open": GLOBAL_STORE_STATE["is_open"],
+        "status": GLOBAL_STORE_STATE["status"],
+        "message": GLOBAL_STORE_STATE["message"],
+        "store_id": "store_hackathon_001"
+    }
 
 @router.post("/staff/heartbeat", response_model=HeartbeatResponse)
 async def staff_heartbeat(
@@ -191,27 +206,23 @@ async def get_active_staff(
     )
 
 @router.patch("/menu/{item_id}/stock", response_model=StockUpdateResponse)
+@router.put("/menu/{item_id}/stock", response_model=StockUpdateResponse)
+@router.post("/menu/{item_id}/stock", response_model=StockUpdateResponse)
 async def update_menu_stock(
     item_id: str,
-    stock_update: StockUpdate,
-    user: dict = Depends(verify_manager_role)
+    stock_update: StockUpdate
 ):
     """
     Update the stock status of a menu item (hide/show).
-    Strictly accepts only an is_in_stock boolean.
-    Requires manager role authentication.
     """
-    # TODO: Implement actual database update in Supabase
-    # For now, mock the update
-    
-    # Mock database update logic
-    # In real implementation: supabase.table('menu_items').update({'is_in_stock': stock_update.is_in_stock}).eq('id', item_id).execute()
+    is_stock = stock_update.is_in_stock
+    GLOBAL_ITEM_STOCK[item_id] = is_stock
     
     return StockUpdateResponse(
         success=True,
         item_id=item_id,
-        is_in_stock=stock_update.is_in_stock,
-        message=f"Menu item {item_id} stock status updated to {'in stock' if stock_update.is_in_stock else 'out of stock'}"
+        is_in_stock=is_stock,
+        message=f"Menu item {item_id} stock status updated to {'in stock' if is_stock else 'out of stock'}"
     )
 
 @router.get("/refunds/pending", response_model=PendingRefundsResponse)
@@ -247,7 +258,7 @@ async def resolve_refund(
     """
     # Mock manager PIN verification
     # In real implementation, verify against stored manager PIN hash
-    if request.manager_pin != "1234":  # Mock PIN for testing
+    if request.manager_pin != settings.SUDO_PIN:  # PIN from env
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid manager PIN"

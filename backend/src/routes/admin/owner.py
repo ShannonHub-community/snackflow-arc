@@ -7,7 +7,7 @@ import qrcode
 
 from src.middleware.admin_security import verify_owner_role, verify_sudo_pin, SudoPinRequest
 from src.schemas.admin_schemas import StoreConfig, MenuItemCreate, MenuItemUpdate, MenuItemResponse
-router = APIRouter(prefix="/api/owner", tags=["owner"])
+router = APIRouter(tags=["owner"])
 
 # Mock in-memory database for store configuration
 mock_store_config = {
@@ -21,18 +21,73 @@ mock_store_config = {
     "tax_rate": 5.0
 }
 
-# Mock in-memory database for menu items
+# Mock in-memory database for menu items (6 Allowed Western Items)
 mock_menu_items = {
-    "prod_dosa_001": {
-        "id": "prod_dosa_001",
-        "name": "Masala Dosa",
-        "price": 80.0,
-        "category": "South Indian",
-        "station": "Dosa Station",
-        "icon": "dosa-icon-svg",
+    "prod_tea_001": {
+        "id": "prod_tea_001",
+        "name": "Tea",
+        "price": 30.0,
+        "category": "Beverages",
+        "station": "Beverage Station",
+        "icon": "coffee",
         "is_available": True,
         "is_active": True,
-        "description": "Crispy dosa with spiced potato filling"
+        "description": "Freshly brewed hot tea"
+    },
+    "prod_coffee_001": {
+        "id": "prod_coffee_001",
+        "name": "Coffee",
+        "price": 50.0,
+        "category": "Beverages",
+        "station": "Beverage Station",
+        "icon": "coffee",
+        "is_available": True,
+        "is_active": True,
+        "description": "Rich espresso coffee"
+    },
+    "prod_pizza_001": {
+        "id": "prod_pizza_001",
+        "name": "Pizza",
+        "price": 250.0,
+        "category": "Mains",
+        "station": "Oven Station",
+        "icon": "pizza",
+        "is_available": True,
+        "is_active": True,
+        "description": "Classic cheese Margherita pizza"
+    },
+    "prod_pasta_001": {
+        "id": "prod_pasta_001",
+        "name": "Pasta",
+        "price": 200.0,
+        "category": "Mains",
+        "station": "Oven Station",
+        "icon": "pasta",
+        "is_available": True,
+        "is_active": True,
+        "description": "Creamy Alfredo pasta"
+    },
+    "prod_sandwich_001": {
+        "id": "prod_sandwich_001",
+        "name": "Sandwich",
+        "price": 120.0,
+        "category": "Snacks",
+        "station": "Grill Station",
+        "icon": "sandwich",
+        "is_available": True,
+        "is_active": True,
+        "description": "Grilled cheese and veggie sandwich"
+    },
+    "prod_burger_001": {
+        "id": "prod_burger_001",
+        "name": "Burger",
+        "price": 150.0,
+        "category": "Snacks",
+        "station": "Grill Station",
+        "icon": "burger",
+        "is_available": True,
+        "is_active": True,
+        "description": "Juicy classic burger"
     }
 }
 

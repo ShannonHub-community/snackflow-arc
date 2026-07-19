@@ -66,9 +66,9 @@ export default function Analytics() {
                 </h4>
                 <div className="space-y-4">
                   {[
-                    { name: "Classic Butter Dosa", sold: 142, width: "90%", color: "bg-orange-500" },
-                    { name: "Vada Pav (2pc)", sold: 118, width: "75%", color: "bg-orange-400" },
-                    { name: "Filter Coffee", sold: 95, width: "60%", color: "bg-orange-300" }
+                    { name: "Margherita Pizza", sold: 142, width: "90%", color: "bg-orange-500" },
+                    { name: "Classic Burger", sold: 118, width: "75%", color: "bg-orange-400" },
+                    { name: "Espresso Coffee", sold: 95, width: "60%", color: "bg-orange-300" }
                   ].map((item, i) => (
                     <div key={item.name} className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold">

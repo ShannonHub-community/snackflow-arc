@@ -14,3 +14,38 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
 }
+
+@media print {
+  /* Hide all elements in the body by default */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Make the printable QR content and all its children visible */
+  .printable-qr-content, .printable-qr-content * {
+    visibility: visible;
+  }
+  
+  /* Hide any print-hidden items */
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Position the printable content on the printed page */
+  .printable-qr-content {
+    position: absolute;
+    left: 50% !important;
+    top: 50px !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+  }
+}

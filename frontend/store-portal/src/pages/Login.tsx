@@ -6,6 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { NumericKeypad } from "../components/NumericKeypad";
+import { apiClient } from "../lib/apiClient";
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState<"owner" | "staff">("owner");
@@ -16,38 +17,93 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Staff State
   const [storeCode, setStoreCode] = useState("");
   const [staffUser, setStaffUser] = useState("");
   const [staffPin, setStaffPin] = useState("");
 
-  const handleOwnerLogin = (e: React.FormEvent) => {
+  const handleOwnerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step === 1) {
-      if (username && password) {
-        setStep(2);
+    setLoginError("");
+    setIsLoading(true);
+
+    try {
+      if (step === 1) {
+        if (username && password) {
+          const response = await apiClient.post<{ success: boolean; message: string }>('/auth/owner/login', {
+            username,
+            password,
+          });
+          if (response.success) {
+            setStep(2);
+          } else {
+            setLoginError(response.message || "Login failed");
+          }
+        }
+      } else if (step === 2) {
+        if (otp) {
+          const response = await apiClient.post<{ success: boolean; access_token?: string; message: string }>('/auth/owner/verify-otp', {
+            username,
+            otp,
+          });
+          if (response.success && response.access_token) {
+            apiClient.setToken(response.access_token);
+            setStep(3);
+          } else {
+            setLoginError(response.message || "OTP verification failed");
+          }
+        }
+      } else if (step === 3) {
+        navigate("/owner/profile");
       }
-    } else if (step === 2) {
-      if (otp) {
-        setStep(3);
-      }
-    } else if (step === 3) {
-      navigate("/owner/profile");
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleStaffLogin = (e?: React.FormEvent) => {
+  const handleStaffLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (storeCode && staffUser && staffPin.length === 4) {
-      const user = staffUser.toLowerCase();
-      if (user === "admin" || user === "manager") {
-        navigate("/manager/shift");
-      } else if (user.includes("chef") || user.includes("kitchen")) {
-        navigate("/kds");
-      } else {
-        navigate("/counter");
+    setLoginError("");
+    setIsLoading(true);
+
+    try {
+      if (storeCode && staffUser && staffPin.length === 4) {
+        const response = await apiClient.post<{ success: boolean; access_token?: string; message: string }>('/auth/staff/login', {
+          store_code: storeCode,
+          username: staffUser,
+          pin: staffPin,
+        });
+
+        if (response.success && response.access_token) {
+          apiClient.setToken(response.access_token);
+          
+          // Decode JWT to get role
+          const tokenPayload = JSON.parse(atob(response.access_token.split('.')[1]));
+          const role = tokenPayload.role;
+          
+          // Role-based routing
+          if (role === "manager") {
+            navigate("/manager/shift");
+          } else if (role === "kitchen") {
+            navigate("/kds");
+          } else if (role === "counter") {
+            navigate("/counter");
+          } else {
+            navigate("/counter"); // default fallback
+          }
+        } else {
+          setLoginError(response.message || "Staff login failed");
+        }
       }
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,27 +148,36 @@ export default function Login() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleOwnerLogin} className="space-y-4">
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
+                    {loginError}
+                  </div>
+                )}
                 {step === 1 && (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="username">Username</Label>
-                      <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" required />
+                      <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" required disabled={isLoading} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required disabled={isLoading} />
                     </div>
-                    <Button type="submit" className="w-full">Continue</Button>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Sending..." : "Continue"}
+                    </Button>
                   </>
                 )}
                 {step === 2 && (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="otp">One-Time Password</Label>
-                      <Input id="otp" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" maxLength={6} required />
+                      <Input id="otp" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" maxLength={6} required disabled={isLoading} />
                     </div>
-                    <Button type="submit" className="w-full">Verify Identity</Button>
-                    <Button type="button" variant="ghost" className="w-full" onClick={() => setStep(1)}>Back</Button>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Verifying..." : "Verify Identity"}
+                    </Button>
+                    <Button type="button" variant="ghost" className="w-full" onClick={() => setStep(1)} disabled={isLoading}>Back</Button>
                   </>
                 )}
                 {step === 3 && (
@@ -152,13 +217,18 @@ export default function Login() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleStaffLogin} className="space-y-4">
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
+                    {loginError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="storeCode">Store Code</Label>
-                  <Input id="storeCode" value={storeCode} onChange={(e) => setStoreCode(e.target.value)} placeholder="e.g. CAFE-882" required />
+                  <Input id="storeCode" value={storeCode} onChange={(e) => setStoreCode(e.target.value)} placeholder="e.g. CAFE-882" required disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="staffUser">System Username</Label>
-                  <Input id="staffUser" value={staffUser} onChange={(e) => setStaffUser(e.target.value)} placeholder="e.g. admin" required />
+                  <Input id="staffUser" value={staffUser} onChange={(e) => setStaffUser(e.target.value)} placeholder="e.g. admin" required disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label>4-Digit PIN</Label>
@@ -176,7 +246,9 @@ export default function Login() {
                   </div>
                   <NumericKeypad value={staffPin} onChange={setStaffPin} maxLength={4} />
                 </div>
-                <Button type="button" onClick={handleStaffLogin} className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700">Start Shift</Button>
+                <Button type="button" onClick={handleStaffLogin} className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                  {isLoading ? "Authenticating..." : "Start Shift"}
+                </Button>
               </form>
             </CardContent>
           </Card>

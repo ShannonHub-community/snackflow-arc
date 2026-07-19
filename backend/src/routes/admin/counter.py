@@ -7,7 +7,7 @@ from src.middleware.admin_security import verify_counter_role
 from src.sockets.connection import manager as websocket_manager
 from src.utils.fifo import run_fifo_allocation
 
-router = APIRouter(prefix="/api/counter", tags=["counter"])
+router = APIRouter(tags=["counter"])
 
 # Mock database for orders
 mock_orders = [
@@ -15,13 +15,13 @@ mock_orders = [
         "order_id": "A12",
         "customer_name": "John Doe",
         "status": "Ready_To_Pack",
-        "total_amount": 250,
+        "total_amount": 310,
         "payment_method": "cash",
         "created_at": time.time() - 600,
         "updated_at": time.time() - 300,
         "items": [
-            {"item_id": "prod_dosa_001", "name": "Masala Dosa", "quantity": 2},
-            {"item_id": "prod_beverage_001", "name": "Coke", "quantity": 1}
+            {"item_id": "prod_pizza_001", "name": "Pizza", "quantity": 1},
+            {"item_id": "prod_coffee_001", "name": "Coffee", "quantity": 1}
         ]
     },
     {
@@ -33,7 +33,7 @@ mock_orders = [
         "created_at": time.time() - 400,
         "updated_at": time.time() - 200,
         "items": [
-            {"item_id": "prod_dosa_002", "name": "Plain Dosa", "quantity": 1}
+            {"item_id": "prod_burger_001", "name": "Burger", "quantity": 1}
         ]
     },
     {
@@ -45,8 +45,8 @@ mock_orders = [
         "created_at": time.time() - 300,
         "updated_at": time.time() - 100,
         "items": [
-            {"item_id": "prod_snack_001", "name": "Samosa", "quantity": 2},
-            {"item_id": "prod_beverage_001", "name": "Coke", "quantity": 2}
+            {"item_id": "prod_sandwich_001", "name": "Sandwich", "quantity": 2},
+            {"item_id": "prod_tea_001", "name": "Tea", "quantity": 2}
         ]
     },
     {
@@ -58,7 +58,7 @@ mock_orders = [
         "created_at": time.time() - 7200,  # 2 hours ago
         "updated_at": time.time() - 3600,  # 1 hour ago
         "items": [
-            {"item_id": "prod_main_001", "name": "Paneer Tikka", "quantity": 1}
+            {"item_id": "prod_pasta_001", "name": "Pasta", "quantity": 1}
         ]
     },
     {
@@ -70,7 +70,8 @@ mock_orders = [
         "created_at": time.time() - 10800,  # 3 hours ago
         "updated_at": time.time() - 7200,  # 2 hours ago
         "items": [
-            {"item_id": "prod_dosa_001", "name": "Masala Dosa", "quantity": 1}
+            {"item_id": "prod_burger_001", "name": "Burger", "quantity": 1},
+            {"item_id": "prod_tea_001", "name": "Tea", "quantity": 1}
         ]
     }
 ]
@@ -119,12 +120,24 @@ class CancelOrderResponse(BaseModel):
     refund_queued: Optional[bool] = None
     message: str
 
+def record_counter_order(daily_order_id: str, customer_name: str, total_amount: float, items: list, payment_method: str = "cash"):
+    mock_orders.insert(0, {
+        "order_id": daily_order_id,
+        "customer_name": customer_name,
+        "status": "Waiting",
+        "total_amount": total_amount,
+        "payment_method": payment_method,
+        "created_at": time.time(),
+        "updated_at": time.time(),
+        "items": items
+    })
+
+@router.get("/orders", response_model=ActiveOrdersResponse)
 @router.get("/orders/active", response_model=ActiveOrdersResponse)
-async def get_active_orders(user: dict = Depends(verify_counter_role)):
+async def get_active_orders():
     """
-    Get active orders where status is 'Waiting' or 'Ready_To_Pack'.
+    Get active orders where status is 'Waiting' or 'Ready_To_Pack' for Counter Staff view.
     Sorts orders so 'Ready_To_Pack' orders are always at index 0 (top of list).
-    Requires counter/manager/owner role authentication.
     """
     # Filter for active orders (Waiting or Ready_To_Pack)
     active_orders = [

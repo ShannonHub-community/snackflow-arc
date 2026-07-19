@@ -59,26 +59,26 @@ function CounterTab() {
     { 
       id: "A12", 
       status: "ready", 
-      items: [{name: "1x Masala Dosa", note: "Extra spicy"}, {name: "2x Filter Coffee", note: "Less sugar"}], 
+      items: [{name: "1x Pizza", note: "Extra cheese"}, {name: "2x Coffee", note: "Less sugar"}], 
       time: "2m ago" 
     },
     { 
       id: "B44", 
       status: "ready", 
-      items: [{name: "1x Idli Sambar", note: "Separate sambar"}], 
+      items: [{name: "1x Burger", note: "No onions"}], 
       time: "5m ago" 
     },
     { 
       id: "C09", 
       status: "packed", 
-      items: [{name: "1x Plain Dosa"}], 
+      items: [{name: "1x Sandwich"}], 
       time: "1m ago" 
     },
     { 
       id: "D91", 
       status: "cancelled", 
-      items: [{name: "1x Onion Uttapam"}], 
-      time: "Just now", 
+      items: [{name: "1x Pasta"}], 
+      time: "8m ago", 
       cancelCountdown: 15 
     },
   ]);

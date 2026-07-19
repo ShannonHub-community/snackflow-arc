@@ -2,8 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
-import { QrCode, Download, Save, CheckCircle2, Lock, ShieldAlert, X, Eye, EyeOff } from "lucide-react";
+import { QrCode, Download, Save, CheckCircle2, Lock, ShieldAlert, X, Eye, EyeOff, Printer } from "lucide-react";
 import React, { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function ProfileSettings() {
   const [identityStatus, setIdentityStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -55,6 +56,8 @@ export default function ProfileSettings() {
       }, 1000);
     }
   };
+
+  const customerPortalUrl = `${window.location.origin.replace(":3001", ":3000")}/?store=store_hackathon_001`;
 
   return (
     <div className="space-y-6 relative">
@@ -298,26 +301,35 @@ export default function ProfileSettings() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-50 border-slate-200">
-            <CardHeader className="bg-transparent border-0 pb-0">
-              <CardTitle className="text-slate-800">QR Code Engine</CardTitle>
-              <CardDescription>Generate high-res table stickers.</CardDescription>
+          <Card className="bg-white border-slate-200 shadow-sm print:shadow-none print:border-0 print:m-0">
+            <CardHeader className="text-center border-b border-slate-100 pb-4 print:hidden">
+              <CardTitle className="text-2xl font-black text-slate-900 tracking-tight uppercase">Store QR Code</CardTitle>
+              <CardDescription className="text-slate-500 font-medium">Customer Express Ordering Portal</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center py-6">
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-4">
-                <QrCode className="h-32 w-32 text-slate-900" />
+            <CardContent className="flex flex-col items-center py-6 space-y-4 printable-qr-content">
+              <div className="text-2xl font-black tracking-tight text-slate-900 uppercase bg-orange-50 text-orange-600 px-6 py-2 rounded-2xl border border-orange-200 shadow-sm text-center">
+                SnackFlow Bistro
               </div>
-              <div className="text-[10px] font-mono font-bold text-slate-500 bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-300">snackflow.com/menu/CAFE-882</div>
+              <p className="text-xs text-slate-500 font-medium text-center print:hidden">Scan with smartphone camera to view menu & place express order</p>
+              <div className="bg-white p-6 rounded-3xl shadow-md border-2 border-slate-100 flex items-center justify-center">
+                <QRCodeSVG 
+                  value={customerPortalUrl}
+                  size={180}
+                  level="H"
+                  marginSize={2}
+                />
+              </div>
+              <div className="text-[11px] font-mono font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 text-center break-all">
+                {customerPortalUrl}
+              </div>
             </CardContent>
-            <CardFooter className="flex justify-center bg-transparent border-0 pt-0">
+            <CardFooter className="flex justify-center pt-2 print:hidden">
               <Button 
-                className={`w-full ${qrStatus === "generated" ? "bg-green-600 hover:bg-green-700" : ""}`}
-                onClick={() => handleAction(setQrStatus, "generating", "generated")}
-                disabled={qrStatus !== "idle"}
+                onClick={() => window.print()} 
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
               >
-                {qrStatus === "idle" && <><Download className="mr-2 h-4 w-4" /> Generate & Print Store QR</>}
-                {qrStatus === "generating" && "Generating QR..."}
-                {qrStatus === "generated" && <><CheckCircle2 className="mr-2 h-4 w-4" /> Ready to Print</>}
+                <Printer className="w-5 h-5" />
+                Print QR Code
               </Button>
             </CardFooter>
           </Card>

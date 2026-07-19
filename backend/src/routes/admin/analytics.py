@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 
 from src.middleware.admin_security import verify_manager_role
 
-router = APIRouter(prefix="/api/owner/analytics", tags=["analytics"])
+router = APIRouter(tags=["analytics"])
 
 class TopItem(BaseModel):
     item_id: str
@@ -40,28 +40,28 @@ async def get_dashboard_analytics(user: dict = Depends(verify_manager_role)):
         "total_orders": 87,
         "top_items": [
             {
-                "item_id": "prod_dosa_001",
-                "name": "Masala Dosa",
-                "quantity_sold": 25,
-                "revenue": 2000.0
+                "item_id": "prod_pizza_001",
+                "name": "Pizza",
+                "quantity_sold": 45,
+                "revenue": 11250.0
             },
             {
-                "item_id": "prod_beverage_002",
-                "name": "Coke",
-                "quantity_sold": 40,
-                "revenue": 1200.0
+                "item_id": "prod_coffee_001",
+                "name": "Coffee",
+                "quantity_sold": 60,
+                "revenue": 3000.0
             },
             {
-                "item_id": "prod_snack_003",
-                "name": "Samosa",
+                "item_id": "prod_burger_001",
+                "name": "Burger",
                 "quantity_sold": 35,
-                "revenue": 1050.0
+                "revenue": 5250.0
             },
             {
-                "item_id": "prod_main_004",
-                "name": "Thali",
-                "quantity_sold": 15,
-                "revenue": 4500.0
+                "item_id": "prod_pasta_001",
+                "name": "Pasta",
+                "quantity_sold": 25,
+                "revenue": 5000.0
             },
             {
                 "item_id": "prod_dessert_005",

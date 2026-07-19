@@ -14,7 +14,10 @@ class CRUDOrder(CRUDBase[Order]):
     async def get_with_items(self, db: AsyncSession, order_id: uuid.UUID) -> Order | None:
         result = await db.execute(
             select(Order)
-            .options(selectinload(Order.items), selectinload(Order.payment))
+            .options(
+                selectinload(Order.items).selectinload(OrderItem.menu_item),
+                selectinload(Order.payment),
+            )
             .where(Order.id == order_id)
         )
         return result.scalar_one_or_none()
@@ -28,7 +31,11 @@ class CRUDOrder(CRUDBase[Order]):
         skip: int = 0,
         limit: int = 50,
     ) -> list[Order]:
-        stmt = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc())
+        stmt = (
+            select(Order)
+            .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
+            .order_by(Order.created_at.desc())
+        )
         if status is not None:
             stmt = stmt.where(Order.status == status)
         if session_uuid is not None:

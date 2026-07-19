@@ -31,11 +31,14 @@ class Settings(BaseSettings):
 
     # ---------- Security ----------
     SECRET_KEY: str
+    JWT_SECRET_KEY: str = "change-this-jwt-secret"
+    SUDO_PIN: str = "1234"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ADMIN_API_KEY: str = "change_this_admin_key"
 
     # ---------- CORS ----------
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    FRONTEND_URL: str = ""
 
     # ---------- Razorpay ----------
     RAZORPAY_KEY_ID: str = ""

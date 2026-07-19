@@ -25,7 +25,7 @@ export function PinModal({
 
   const handleVerify = () => {
     if (pin.length === 4) {
-      if (pin === "1234") { // Mock validation
+      if (pin === ((import.meta as any).env?.VITE_SUDO_PIN || "1234")) { // PIN from env
         onSuccess();
         setPin("");
         setError(false);
@@ -86,7 +86,7 @@ export function PinModal({
           
           {error && (
             <p className="text-center text-red-500 text-sm font-bold animate-pulse">
-              Invalid PIN. Try again. (Use 1234)
+              Invalid PIN. Try again.
             </p>
           )}
 
