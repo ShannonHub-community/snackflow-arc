@@ -46,18 +46,73 @@ async def list_menu(all_items: bool = False, db: AsyncSession = Depends(get_db))
     except Exception as e:
         print(f"[MENU DIAGNOSTIC] DB menu fetch error/fallback: {e}")
 
+    # Added image_url and prep_time_minutes to all demo items to fix Pydantic 500 error
     items = [
-        MenuItemOut(id=uuid.UUID("11111111-1111-1111-1111-111111111111"), name="Tea", price=40.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000001"), in_stock=GLOBAL_ITEM_STOCK.get("prod_tea_001", True) and GLOBAL_ITEM_STOCK.get("11111111-1111-1111-1111-111111111111", True), description='{"icon":"coffee","station":"Beverage Station"}'),
-        MenuItemOut(id=uuid.UUID("22222222-2222-2222-2222-222222222222"), name="Coffee", price=60.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000001"), in_stock=GLOBAL_ITEM_STOCK.get("prod_coffee_001", True) and GLOBAL_ITEM_STOCK.get("22222222-2222-2222-2222-222222222222", True), description='{"icon":"coffee","station":"Beverage Station"}'),
-        MenuItemOut(id=uuid.UUID("33333333-3333-3333-3333-333333333333"), name="Pizza", price=250.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), in_stock=GLOBAL_ITEM_STOCK.get("prod_pizza_001", True) and GLOBAL_ITEM_STOCK.get("33333333-3333-3333-3333-333333333333", True), description='{"icon":"pizza","station":"Oven Station"}'),
-        MenuItemOut(id=uuid.UUID("44444444-4444-4444-4444-444444444444"), name="Pasta", price=220.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), in_stock=GLOBAL_ITEM_STOCK.get("prod_pasta_001", True) and GLOBAL_ITEM_STOCK.get("44444444-4444-4444-4444-444444444444", True), description='{"icon":"pasta","station":"Oven Station"}'),
-        MenuItemOut(id=uuid.UUID("55555555-5555-5555-5555-555555555555"), name="Sandwich", price=120.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), in_stock=GLOBAL_ITEM_STOCK.get("prod_sandwich_001", True) and GLOBAL_ITEM_STOCK.get("55555555-5555-5555-5555-555555555555", True), description='{"icon":"sandwich","station":"Grill Station"}'),
-        MenuItemOut(id=uuid.UUID("66666666-6666-6666-6666-666666666666"), name="Burger", price=150.0, category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), in_stock=GLOBAL_ITEM_STOCK.get("prod_burger_001", True) and GLOBAL_ITEM_STOCK.get("66666666-6666-6666-6666-666666666666", True), description='{"icon":"burger","station":"Grill Station"}')
+        MenuItemOut(
+            id=uuid.UUID("11111111-1111-1111-1111-111111111111"), 
+            name="Tea", 
+            price=40.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000001"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_tea_001", True) and GLOBAL_ITEM_STOCK.get("11111111-1111-1111-1111-111111111111", True), 
+            description='{"icon":"coffee","station":"Beverage Station"}',
+            image_url="https://via.placeholder.com/150?text=Tea",
+            prep_time_minutes=5
+        ),
+        MenuItemOut(
+            id=uuid.UUID("22222222-2222-2222-2222-222222222222"), 
+            name="Coffee", 
+            price=60.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000001"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_coffee_001", True) and GLOBAL_ITEM_STOCK.get("22222222-2222-2222-2222-222222222222", True), 
+            description='{"icon":"coffee","station":"Beverage Station"}',
+            image_url="https://via.placeholder.com/150?text=Coffee",
+            prep_time_minutes=5
+        ),
+        MenuItemOut(
+            id=uuid.UUID("33333333-3333-3333-3333-333333333333"), 
+            name="Pizza", 
+            price=250.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_pizza_001", True) and GLOBAL_ITEM_STOCK.get("33333333-3333-3333-3333-333333333333", True), 
+            description='{"icon":"pizza","station":"Oven Station"}',
+            image_url="https://via.placeholder.com/150?text=Pizza",
+            prep_time_minutes=15
+        ),
+        MenuItemOut(
+            id=uuid.UUID("44444444-4444-4444-4444-444444444444"), 
+            name="Pasta", 
+            price=220.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_pasta_001", True) and GLOBAL_ITEM_STOCK.get("44444444-4444-4444-4444-444444444444", True), 
+            description='{"icon":"pasta","station":"Oven Station"}',
+            image_url="https://via.placeholder.com/150?text=Pasta",
+            prep_time_minutes=12
+        ),
+        MenuItemOut(
+            id=uuid.UUID("55555555-5555-5555-5555-555555555555"), 
+            name="Sandwich", 
+            price=120.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_sandwich_001", True) and GLOBAL_ITEM_STOCK.get("55555555-5555-5555-5555-555555555555", True), 
+            description='{"icon":"sandwich","station":"Grill Station"}',
+            image_url="https://via.placeholder.com/150?text=Sandwich",
+            prep_time_minutes=8
+        ),
+        MenuItemOut(
+            id=uuid.UUID("66666666-6666-6666-6666-666666666666"), 
+            name="Burger", 
+            price=150.0, 
+            category_id=uuid.UUID("00000000-0000-0000-0000-000000000002"), 
+            in_stock=GLOBAL_ITEM_STOCK.get("prod_burger_001", True) and GLOBAL_ITEM_STOCK.get("66666666-6666-6666-6666-666666666666", True), 
+            description='{"icon":"burger","station":"Grill Station"}',
+            image_url="https://via.placeholder.com/150?text=Burger",
+            prep_time_minutes=10
+        )
     ]
+    
     if all_items:
         return items
     return [i for i in items if i.in_stock]
-
 
 
 @router.get("/{item_id}", response_model=MenuItemOut)
