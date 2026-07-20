@@ -94,8 +94,7 @@ async def owner_login(request: OwnerLoginRequest):
             detail="Invalid credentials"
         )
     
-
-    # Mock bcrypt verification (Truncated to 72 characters to prevent Bcrypt crashes)
+    # Mock bcrypt verification (Truncated to 72 bytes to prevent crash)
     safe_password = request.password[:72]
     if not pwd_context.verify(safe_password, user["password_hash"]):
         raise HTTPException(
@@ -191,8 +190,9 @@ async def verify_sudo_pin(request: SudoPinRequest):
     Verify Sudo PIN and return elevated token or success flag.
     Mock bcrypt verification.
     """
-    # Mock bcrypt verification
-    if not pwd_context.verify(request.pin, MOCK_SUDO_PIN_HASH):
+    # Mock bcrypt verification (Truncated to 72 bytes to prevent crash)
+    safe_pin = request.pin[:72]
+    if not pwd_context.verify(safe_pin, MOCK_SUDO_PIN_HASH):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Sudo PIN"
@@ -264,8 +264,9 @@ async def staff_login(request: StaffLoginRequest):
             detail="Invalid credentials"
         )
     
-    # Mock bcrypt PIN verification
-    if not pwd_context.verify(request.pin, user.get("pin_hash", "")):
+    # Mock bcrypt PIN verification (Truncated to 72 bytes to prevent crash)
+    safe_pin = request.pin[:72]
+    if not pwd_context.verify(safe_pin, user.get("pin_hash", "")):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
