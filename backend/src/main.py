@@ -54,8 +54,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ---- CORS ----
-origins = ["http://localhost:3000"]
+# ---- CORS SETUP ----
+# We explicitly allow local development URLs AND both live Vercel deployments.
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://snackflow-customer.vercel.app",
+    "https://snackflow-arc.vercel.app",
+]
+
+# Keep this hook in place in case you define alternative URLs in your Render environment variables
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     origins.append(frontend_url)
