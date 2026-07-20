@@ -57,7 +57,8 @@ export default function ProfileSettings() {
     }
   };
 
-  const customerPortalUrl = `${window.location.origin.replace(":3001", ":3000")}/?store=store_hackathon_001`;
+  const storeId = "store_hackathon_001";
+  const customerPortalUrl = `https://snackflow-customer.vercel.app/?store=${storeId}`;
 
   return (
     <div className="space-y-6 relative">
