@@ -4,13 +4,10 @@ import random
 import time
 from datetime import datetime, timedelta
 import jwt
-from passlib.context import CryptContext
+import bcrypt  # Replaced passlib with direct bcrypt
 from src.config.settings import settings
 
 router = APIRouter(tags=["auth"])
-
-# Mock password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Simple in-memory OTP cache (username -> {"otp": str, "timestamp": float})
 otp_cache = {}
@@ -94,9 +91,9 @@ async def owner_login(request: OwnerLoginRequest):
             detail="Invalid credentials"
         )
     
-    # Mock bcrypt verification (Truncated to 72 bytes to prevent crash)
+    # Direct bcrypt verification (Truncated to 72 bytes)
     safe_password = request.password[:72]
-    if not pwd_context.verify(safe_password, user["password_hash"]):
+    if not bcrypt.checkpw(safe_password.encode('utf-8'), user["password_hash"].encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
@@ -188,11 +185,11 @@ async def verify_otp(request: VerifyOtpRequest):
 async def verify_sudo_pin(request: SudoPinRequest):
     """
     Verify Sudo PIN and return elevated token or success flag.
-    Mock bcrypt verification.
+    Direct bcrypt verification.
     """
-    # Mock bcrypt verification (Truncated to 72 bytes to prevent crash)
+    # Direct bcrypt verification (Truncated to 72 bytes)
     safe_pin = request.pin[:72]
-    if not pwd_context.verify(safe_pin, MOCK_SUDO_PIN_HASH):
+    if not bcrypt.checkpw(safe_pin.encode('utf-8'), MOCK_SUDO_PIN_HASH.encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Sudo PIN"
@@ -218,7 +215,7 @@ async def verify_sudo_pin(request: SudoPinRequest):
 async def staff_login(request: StaffLoginRequest):
     """
     Staff login endpoint.
-    Accepts store_code/username/PIN, verifies credentials with mock bcrypt,
+    Accepts store_code/username/PIN, verifies credentials with direct bcrypt,
     and returns JWT with payload { 'user_id': '123', 'role': 'manager', 'store_code': 'CAFE-882' }.
     Returns 401 on authentication failure.
     
@@ -264,9 +261,11 @@ async def staff_login(request: StaffLoginRequest):
             detail="Invalid credentials"
         )
     
-    # Mock bcrypt PIN verification (Truncated to 72 bytes to prevent crash)
+    # Direct bcrypt PIN verification (Truncated to 72 bytes)
     safe_pin = request.pin[:72]
-    if not pwd_context.verify(safe_pin, user.get("pin_hash", "")):
+    pin_hash = user.get("pin_hash", "")
+    
+    if not pin_hash or not bcrypt.checkpw(safe_pin.encode('utf-8'), pin_hash.encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
