@@ -94,8 +94,10 @@ async def owner_login(request: OwnerLoginRequest):
             detail="Invalid credentials"
         )
     
-    # Mock bcrypt verification
-    if not pwd_context.verify(request.password, user["password_hash"]):
+
+    # Mock bcrypt verification (Truncated to 72 characters to prevent Bcrypt crashes)
+    safe_password = request.password[:72]
+    if not pwd_context.verify(safe_password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
